@@ -363,7 +363,7 @@ function PesananDetailPage() {
     <div className="bg-slate-100 min-h-screen py-8 sm:py-12">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl">
         <Link
-          to="/PesananPage"
+          to="/Pesanan"
           className="inline-flex items-center text-sm font-medium text-indigo-600 hover:text-indigo-800 mb-6 group"
         >
           <ArrowLeftIcon className="h-4 w-4 mr-1.5 transition-transform duration-150 group-hover:-translate-x-1" />
@@ -534,18 +534,17 @@ function PesananDetailPage() {
               <ul role="list" className="divide-y divide-slate-200">
                 {order.items && order.items.length > 0 ? (
                   order.items.map((item, index) => {
-                    const imageUrl = item.gambar_utama
-                      ? `https://res.cloudinary.com/dm3icigfr/image/upload/w_100,h_100,c_fill,q_auto,f_auto/${item.gambar_utama}`
-                      : "/placeholder-image.png";
+                    const imageUrl =
+                      item.gambar_utama_url || "/placeholder-image.png";
                     return (
                       <li
-                        key={item.ikan_id || item.id || `item-idx-${index}`}
+                        key={item.id || `item-idx-${index}`}
                         className="flex flex-col sm:flex-row py-4 px-6 sm:px-8 hover:bg-slate-50/50 transition-colors"
                       >
-                        <div className="flex-shrink-0 h-20 w-20 sm:h-24 sm:w-24">
+                        <div className="flex-shrink-0 h-24 w-24 sm:h-32 sm:w-32">
                           <img
                             src={imageUrl}
-                            alt={item.nama_ikan || "Gambar Ikan"}
+                            alt={item.nama_pupuk || "Gambar Pupuk"}
                             className="h-full w-full rounded-lg object-cover bg-gray-100 shadow-sm"
                             onError={handleImageError}
                           />
@@ -553,20 +552,18 @@ function PesananDetailPage() {
                         <div className="ml-0 sm:ml-6 mt-4 sm:mt-0 flex flex-1 flex-col">
                           <div>
                             <div className="flex flex-col sm:flex-row sm:justify-between text-base font-medium text-gray-900">
-                              <h3 className="text-lg">
-                                {item.nama_ikan || "Nama Item Tidak Ada"}
+                              <h3 className="text-lg font-semibold">
+                                {item.nama_pupuk || "Nama Item Tidak Ada"}
                               </h3>
-                              <p className="sm:ml-4 mt-1 sm:mt-0 text-gray-800">
+                              <p className="sm:ml-4 mt-1 sm:mt-0 text-gray-800 font-bold">
                                 {formatRupiah(
-                                  item.subtotal ||
-                                    item.harga_saat_pesan * item.jumlah ||
-                                    0
+                                  item.harga_saat_pesanan * item.jumlah || 0
                                 )}
                               </p>
                             </div>
                             <p className="mt-1 text-sm text-gray-500">
                               Harga Satuan:{" "}
-                              {formatRupiah(item.harga_saat_pesan || 0)}
+                              {formatRupiah(item.harga_saat_pesanan || 0)}
                             </p>
                           </div>
                           <div className="flex flex-1 items-end justify-between text-sm mt-2">
@@ -576,7 +573,7 @@ function PesananDetailPage() {
                             {item.slug && (
                               <div className="flex">
                                 <Link
-                                  to={`/ikan/${item.slug}`}
+                                  to={`/pupuk/${item.slug}`}
                                   className="font-medium text-indigo-600 hover:text-indigo-800"
                                 >
                                   Lihat Produk

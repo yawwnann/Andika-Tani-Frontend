@@ -43,51 +43,50 @@ function useDebounce(value, delay) {
   return debouncedValue;
 }
 
-// --- Komponen IkanCard ---
-function IkanCard({ ikan }) {
+// --- Komponen PupukCard --- (Diubah dari IkanCard)
+function PupukCard({ pupuk }) {
   const navigate = useNavigate();
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [feedback, setFeedback] = useState({ type: "", message: "" });
 
   const viewDetail = (e) => {
-    // Mencegah navigasi jika tombol beli atau detail atau elemen di dalamnya yang diklik
     if (
       e.target.closest(".add-to-cart-button") ||
       e.target.closest(".view-detail-button")
     ) {
       return;
     }
-    navigate(`/ikan/${ikan?.slug || ikan?.id}`);
+    navigate(`/pupuk/${pupuk?.slug || pupuk?.id}`); // <--- Diubah: /ikan -> /pupuk
   };
 
   const navigateToDetailFromButton = (e) => {
-    e.stopPropagation(); // Hentikan propagasi agar onClick pada div utama tidak terpanggil
-    navigate(`/ikan/${ikan?.slug || ikan?.id}`);
+    e.stopPropagation();
+    navigate(`/pupuk/${pupuk?.slug || pupuk?.id}`); // <--- Diubah: /ikan -> /pupuk
   };
 
-  const statusKetersediaan = ikan?.status_ketersediaan?.toLowerCase();
+  const statusKetersediaan = pupuk?.status_ketersediaan?.toLowerCase();
   const isTersedia = statusKetersediaan === "tersedia";
 
   const statusBadgeColor = isTersedia
     ? "bg-emerald-500/15 text-emerald-700 ring-1 ring-inset ring-emerald-600/30"
     : "bg-rose-500/15 text-rose-700 ring-1 ring-inset ring-rose-600/30";
 
-  const namaIkanDisplay =
-    ikan?.nama_ikan || ikan?.nama || "Nama Ikan Tidak Tersedia";
-  const gambarUtama = ikan?.gambar_utama;
-  const hargaIkan = ikan?.harga;
-  const kategoriNama = ikan?.kategori_nama || ikan?.kategori?.nama;
+  const namaPupukDisplay =
+    pupuk?.nama_pupuk || pupuk?.nama || "Nama Pupuk Tidak Tersedia"; // <--- Diubah: namaIkanDisplay
+  const gambarUtama = pupuk?.gambar_utama;
+  const hargaPupuk = pupuk?.harga; // <--- Diubah: hargaIkan
+  const kategoriNama = pupuk?.kategori?.nama_kategori || pupuk?.kategori?.nama; // <--- Diubah: kategoriNama
 
   const handleAddToCart = async (e) => {
-    e.stopPropagation(); // Hentikan propagasi
+    e.stopPropagation();
     if (isAddingToCart || !isTersedia) return;
     setIsAddingToCart(true);
     setFeedback({ type: "", message: "" });
     try {
-      await apiClient.post("/keranjang", { ikan_id: ikan.id, quantity: 1 });
+      await apiClient.post("/keranjang", { pupuk_id: pupuk.id, quantity: 1 }); // <--- Diubah: ikan_id -> pupuk_id
       setFeedback({
         type: "success",
-        message: `${namaIkanDisplay} ditambahkan!`,
+        message: `${namaPupukDisplay} ditambahkan!`, // <--- Diubah: namaIkanDisplay
       });
       window.dispatchEvent(new CustomEvent("cartUpdated"));
       setTimeout(() => setFeedback({ type: "", message: "" }), 2000);
@@ -110,16 +109,16 @@ function IkanCard({ ikan }) {
 
   return (
     <div
-      className="ikan-card group bg-white rounded-lg overflow-hidden transition-all duration-300 ease-in-out hover:shadow-xl flex flex-col h-full relative shadow-lg border border-slate-200/80 hover:border-blue-400"
-      onClick={viewDetail} // onClick utama untuk navigasi
+      className="pupuk-card group bg-white rounded-lg overflow-hidden transition-all duration-300 ease-in-out hover:shadow-xl flex flex-col h-full relative shadow-lg border border-slate-200/80 hover:border-emerald-400" // <--- Warna border diubah
+      onClick={viewDetail}
     >
       {feedback.message && (
         <div
           className={cn(
             "absolute inset-x-0 top-0 z-30 p-1.5 text-center text-xs font-bold transition-all duration-300",
             feedback.type === "success"
-              ? "bg-green-500 text-white"
-              : "bg-red-500 text-white"
+              ? "bg-emerald-500 text-white" // <--- Warna diubah
+              : "bg-rose-500 text-white" // <--- Warna diubah
           )}
         >
           {feedback.message}
@@ -129,10 +128,10 @@ function IkanCard({ ikan }) {
         <img
           src={
             gambarUtama
-              ? `https://res.cloudinary.com/dm3icigfr/image/upload/w_450,h_338,c_fill,q_auto,f_auto,g_auto/${gambarUtama}`
-              : "https://placehold.co/450x338/e2e8f0/94a3b8?text=Gambar+Ikan"
+              ? gambarUtama // Asumsi gambar_utama dari API sudah berupa URL lengkap dari Cloudinary
+              : "https://placehold.co/450x338/e2e8f0/94a3b8?text=Gambar+Pupuk" // <--- Teks placeholder diubah
           }
-          alt={namaIkanDisplay}
+          alt={namaPupukDisplay} // <--- Diubah: namaIkanDisplay
           className="w-full h-full object-cover transition-transform duration-500 ease-in-out group-hover:scale-105"
           loading="lazy"
           onError={(e) => {
@@ -143,7 +142,9 @@ function IkanCard({ ikan }) {
         />
         <div className="absolute top-2.5 left-2.5 z-10 flex flex-col space-y-1.5">
           {kategoriNama && (
-            <span className="bg-blue-600/80 backdrop-blur-sm text-white text-[10px] font-semibold px-2.5 py-1 rounded-full shadow-sm tracking-wide flex items-center">
+            <span className="bg-emerald-600/80 backdrop-blur-sm text-white text-[10px] font-semibold px-2.5 py-1 rounded-full shadow-sm tracking-wide flex items-center">
+              {" "}
+              {/* <--- Warna diubah */}
               <TagIcon className="w-3 h-3 mr-1 opacity-80" /> {kategoriNama}
             </span>
           )}
@@ -162,18 +163,22 @@ function IkanCard({ ikan }) {
       </div>
 
       <div className="p-3.5 sm:p-4 flex flex-col flex-grow">
-        <h3 className="text-sm md:text-base font-semibold text-slate-800 mb-1 line-clamp-2 leading-snug group-hover:text-blue-600 transition-colors cursor-pointer">
-          {namaIkanDisplay}
+        <h3 className="text-sm md:text-base font-semibold text-slate-800 mb-1 line-clamp-2 leading-snug group-hover:text-emerald-600 transition-colors cursor-pointer">
+          {" "}
+          {/* <--- Warna hover diubah */}
+          {namaPupukDisplay}
         </h3>
-        <p className="text-base md:text-lg font-bold text-blue-600 mb-3">
-          {formatRupiah(hargaIkan)}
+        <p className="text-base md:text-lg font-bold text-emerald-600 mb-3">
+          {" "}
+          {/* <--- Warna harga diubah */}
+          {formatRupiah(hargaPupuk)}
         </p>
 
         <div className="mt-auto grid grid-cols-2 gap-2 sm:gap-3">
           <button
             onClick={navigateToDetailFromButton}
-            className="view-detail-button w-full bg-slate-100 hover:bg-slate-200/80 text-slate-700 font-semibold py-2.5 px-3 rounded-md shadow-sm transition-colors duration-150 flex items-center justify-center text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
-            aria-label={`Lihat detail ${namaIkanDisplay}`}
+            className="view-detail-button w-full bg-slate-100 hover:bg-slate-200/80 text-slate-700 font-semibold py-2.5 px-3 rounded-md shadow-sm transition-colors duration-150 flex items-center justify-center text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-1" // <--- Warna fokus diubah
+            aria-label={`Lihat detail ${namaPupukDisplay}`}
           >
             <EyeIcon className="w-4 h-4 mr-1.5 sm:mr-2" /> Detail
           </button>
@@ -181,7 +186,7 @@ function IkanCard({ ikan }) {
             onClick={handleAddToCart}
             disabled={!isTersedia || isAddingToCart}
             title={isTersedia ? "Beli Sekarang" : "Stok Habis"}
-            className="add-to-cart-button w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2.5 px-3 rounded-md shadow-md hover:shadow-lg transition-all duration-200 ease-in-out flex items-center justify-center text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-slate-400/70 disabled:text-slate-100 disabled:cursor-not-allowed disabled:hover:shadow-md disabled:hover:bg-slate-400/70 group/button"
+            className="add-to-cart-button w-full bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-2.5 px-3 rounded-md shadow-md hover:shadow-lg transition-all duration-200 ease-in-out flex items-center justify-center text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:bg-slate-400/70 disabled:text-slate-100 disabled:cursor-not-allowed disabled:hover:shadow-md disabled:hover:bg-slate-400/70 group/button" // <--- Warna diubah
           >
             {isAddingToCart ? (
               <ArrowPathIcon className="w-4 h-4 animate-spin" />
@@ -269,12 +274,12 @@ function Pagination({ meta, onPageChange }) {
               disabled={!link.url || link.active}
               aria-current={link.active ? "page" : undefined}
               className={cn(
-                "relative inline-flex items-center justify-center px-3 py-2 text-xs sm:text-sm font-medium ring-1 ring-inset ring-slate-300/70 focus:z-20 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:ring-offset-0 transition-all duration-150 ease-in-out",
+                "relative inline-flex items-center justify-center px-3 py-2 text-xs sm:text-sm font-medium ring-1 ring-inset ring-slate-300/70 focus:z-20 focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:ring-offset-0 transition-all duration-150 ease-in-out", // <--- Warna fokus diubah
                 link.active
-                  ? "z-10 bg-blue-600 text-white cursor-default ring-blue-600"
+                  ? "z-10 bg-emerald-600 text-white cursor-default ring-emerald-600" // <--- Warna diubah
                   : !link.url
                   ? "text-slate-400 cursor-not-allowed bg-slate-50/50"
-                  : "text-slate-700 bg-white hover:bg-slate-100/70 hover:text-blue-700",
+                  : "text-slate-700 bg-white hover:bg-slate-100/70 hover:text-emerald-700", // <--- Warna hover diubah
                 index === 0 && "rounded-l-md",
                 index === meta.links.length - 1 && "rounded-r-md",
                 (isPrev || isNext) && "px-2 sm:px-2.5"
@@ -313,7 +318,7 @@ const SkeletonCard = () => (
 
 // --- Komponen Utama KatalogPage ---
 function KatalogPage() {
-  const [ikanList, setIkanList] = useState([]);
+  const [pupukList, setPupukList] = useState([]); // <--- Diubah: ikanList -> pupukList
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [paginationData, setPaginationData] = useState(null);
@@ -356,14 +361,14 @@ function KatalogPage() {
     const params = { page, per_page: 12 };
     if (search) params.q = search;
     if (sort === "harga_asc") {
-      params.sort_by = "harga";
-      params.sort_direction = "asc";
+      params.sort = "harga"; // <--- Diubah: sort_by -> sort
+      params.order = "asc"; // <--- Diubah: sort_direction -> order
     } else if (sort === "harga_desc") {
-      params.sort_by = "harga";
-      params.sort_direction = "desc";
+      params.sort = "harga"; // <--- Diubah: sort_by -> sort
+      params.order = "desc"; // <--- Diubah: sort_direction -> order
     } else {
-      params.sort_by = "created_at";
-      params.sort_direction = "desc";
+      params.sort = "created_at"; // <--- Diubah: sort_by -> sort
+      params.order = "desc"; // <--- Diubah: sort_direction -> order
     }
     if (availability) params.status_ketersediaan = availability;
 
@@ -381,17 +386,17 @@ function KatalogPage() {
     }
 
     try {
-      const response = await apiClient.get("/ikan", { params });
+      const response = await apiClient.get("/pupuk", { params }); // <--- Diubah: /ikan -> /pupuk
       if (
         response.data &&
         response.data.data &&
         response.data.meta &&
         Array.isArray(response.data.data)
       ) {
-        setIkanList(response.data.data);
+        setPupukList(response.data.data); // <--- Diubah: setIkanList -> setPupukList
         setPaginationData(response.data);
       } else {
-        setIkanList([]);
+        setPupukList([]); // <--- Diubah: setIkanList -> setPupukList
         setPaginationData(null);
         if (
           response.data &&
@@ -406,11 +411,11 @@ function KatalogPage() {
       }
     } catch (err) {
       console.error("Gagal memuat katalog:", err);
-      let errMsg = "Gagal memuat data ikan. Silakan coba lagi nanti.";
+      let errMsg = "Gagal memuat data pupuk. Silakan coba lagi nanti."; // <--- Teks diubah
       if (err.response?.data?.message) errMsg = err.response.data.message;
       else if (err.message) errMsg = err.message;
       setError(errMsg);
-      setIkanList([]);
+      setPupukList([]); // <--- Diubah: setIkanList -> setPupukList
       setPaginationData(null);
     } finally {
       setLoading(false);
@@ -466,29 +471,28 @@ function KatalogPage() {
   };
 
   return (
-    <div className="bg-gradient-to-br from-slate-100 via-gray-50 to-sky-100 min-h-screen ">
+    <div className="bg-gradient-to-br from-white via-green-50 to-green-100 min-h-screen">
+      {" "}
+      {/* <--- Background diubah */}
       <div className="container mx-auto px-4 sm:px-5 lg:px-6 py-6 md:py-8">
-        <div className="text-center mb-8 md:mb-10 ">
-          {" "}
-          {/* PERHATIKAN: Sesuaikan padding top ini jika layout utama sudah handle offset navbar */}
+        <div className="text-center mb-8 md:mb-10">
           <h1 className="text-3xl md:text-4xl lg:text-[2.8rem] font-extrabold tracking-tight text-slate-800">
-            Temukan <span className="text-blue-600">Seafood Segar</span>{" "}
-            Pilihanmu
+            Temukan <span className="text-emerald-600">Pupuk Berkualitas</span>{" "}
+            Pilihan Anda {/* <--- Teks diubah, Warna diubah */}
           </h1>
           <p className="mt-3 md:mt-4 text-sm sm:text-base md:text-lg text-slate-600/90 max-w-xl mx-auto">
-            Jelajahi beragam hasil laut berkualitas terbaik, langsung dari
-            sumbernya untuk kesegaran maksimal.
+            Jelajahi beragam pupuk berkualitas tinggi, langsung dari produsennya
+            untuk hasil pertanian optimal. {/* <--- Teks diubah */}
           </p>
         </div>
 
-        {/* Filter dan Kontrol Pencarian - Sesuaikan 'top-[Xrem]' atau 'top-[Ypx]' dengan tinggi navbar + jarak */}
-        <div className="mb-6 md:mb-8 p-3.5 sm:p-4 bg-white/80 backdrop-blur-lg rounded-xl shadow-xl top-[5rem] z-20 border border-slate-200/60">
-          {/* GANTI top-[5rem] DENGAN NILAI YANG SESUAI: (tinggi navbar Anda) + (jarak yang diinginkan) */}
-          {/* Contoh: jika navbar 70px dan jarak 10px, maka top-[80px] */}
+        {/* Filter dan Kontrol Pencarian */}
+        <div className="mb-6 md:mb-8 p-3.5 sm:p-4 bg-white/90 backdrop-blur-lg rounded-xl shadow-xl z-20 border border-emerald-200/60">
+          {/* <--- Warna border diubah */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 items-end">
             <div className="md:col-span-1">
               <label
-                htmlFor="search-ikan"
+                htmlFor="search-pupuk" // <--- Diubah: search-ikan -> search-pupuk
                 className="block text-xs font-semibold text-slate-600 mb-1 uppercase tracking-wide"
               >
                 <MagnifyingGlassIcon className="inline h-3.5 w-3.5 mr-1 text-slate-500" />
@@ -497,20 +501,20 @@ function KatalogPage() {
               <div className="relative">
                 <input
                   type="text"
-                  id="search-ikan"
-                  placeholder="Nama ikan, udang, cumi..."
+                  id="search-pupuk" // <--- Diubah: search-ikan -> search-pupuk
+                  placeholder="Nama pupuk, merek, jenis..." // <--- Teks placeholder diubah
                   value={searchQuery}
                   onChange={(e) =>
                     handleFilterOrSortChange("search", e.target.value)
                   }
-                  className="w-full pl-9 pr-3 py-2.5 text-xs sm:text-sm border border-slate-300/80 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white/70 hover:border-slate-400 focus:bg-white placeholder-slate-400/90"
+                  className="w-full pl-9 pr-3 py-2.5 text-xs sm:text-sm border border-slate-300/80 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors bg-white/70 hover:border-slate-400 focus:bg-white placeholder-slate-400/90" // <--- Warna fokus diubah
                 />
                 <MagnifyingGlassIcon className="absolute left-2.5 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
               </div>
             </div>
             <div>
               <label
-                htmlFor="sort-ikan"
+                htmlFor="sort-pupuk" // <--- Diubah: sort-ikan -> sort-pupuk
                 className="block text-xs font-semibold text-slate-600 mb-1 uppercase tracking-wide"
               >
                 <ArrowsUpDownIcon className="inline h-3.5 w-3.5 mr-1 text-slate-500" />
@@ -518,12 +522,12 @@ function KatalogPage() {
               </label>
               <div className="relative">
                 <select
-                  id="sort-ikan"
+                  id="sort-pupuk" // <--- Diubah: sort-ikan -> sort-pupuk
                   value={selectedSort}
                   onChange={(e) =>
                     handleFilterOrSortChange("sort", e.target.value)
                   }
-                  className="appearance-none w-full pl-3 pr-8 py-2.5 text-xs sm:text-sm border border-slate-300/80 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white/70 hover:border-slate-400 focus:bg-white cursor-pointer"
+                  className="appearance-none w-full pl-3 pr-8 py-2.5 text-xs sm:text-sm border border-slate-300/80 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white/70 hover:border-slate-400 focus:bg-white cursor-pointer" // <--- Warna fokus diubah
                 >
                   <option value="terbaru">Paling Baru</option>
                   <option value="harga_asc">Harga: Terendah</option>
@@ -547,11 +551,13 @@ function KatalogPage() {
                   onChange={(e) =>
                     handleFilterOrSortChange("availability", e.target.value)
                   }
-                  className="appearance-none w-full pl-3 pr-8 py-2.5 text-xs sm:text-sm border border-slate-300/80 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white/70 hover:border-slate-400 focus:bg-white cursor-pointer"
+                  className="appearance-none w-full pl-3 pr-8 py-2.5 text-xs sm:text-sm border border-slate-300/80 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white/70 hover:border-slate-400 focus:bg-white cursor-pointer" // <--- Warna fokus diubah
                 >
                   <option value="">Semua Status</option>
-                  <option value="tersedia">Tersedia</option>
-                  <option value="habis">Stok Habis</option>
+                  <option value="Tersedia">Tersedia</option>{" "}
+                  {/* <--- Diubah: lowercase -> capitalize sesuai API */}
+                  <option value="Habis">Stok Habis</option>{" "}
+                  {/* <--- Diubah: lowercase -> capitalize sesuai API */}
                 </select>
                 <ChevronDownIcon className="absolute right-2.5 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
               </div>
@@ -560,10 +566,15 @@ function KatalogPage() {
         </div>
 
         {error && (
-          <div className="mb-5 p-3.5 bg-red-100/80 border-l-4 border-red-600 text-red-700/90 rounded-md shadow flex items-start">
-            <ExclamationTriangleIcon className="h-5 w-5 text-red-600 mr-2.5 flex-shrink-0 mt-0.5" />
+          <div className="mb-5 p-3.5 bg-rose-100/80 border-l-4 border-rose-600 text-rose-700/90 rounded-md shadow flex items-start">
+            {" "}
+            {/* <--- Warna diubah */}
+            <ExclamationTriangleIcon className="h-5 w-5 text-rose-600 mr-2.5 flex-shrink-0 mt-0.5" />{" "}
+            {/* <--- Warna diubah */}
             <div>
-              <h3 className="font-semibold text-red-800/90 text-sm">
+              <h3 className="font-semibold text-rose-800/90 text-sm">
+                {" "}
+                {/* <--- Warna diubah */}
                 Oops, Terjadi Kesalahan!
               </h3>
               <p className="text-xs sm:text-sm">{error}</p>
@@ -576,8 +587,10 @@ function KatalogPage() {
             ? Array.from({ length: paginationData?.meta?.per_page || 12 }).map(
                 (_, index) => <SkeletonCard key={`skeleton-${index}`} />
               )
-            : ikanList.length > 0
-            ? ikanList.map((ikan) => <IkanCard key={ikan.id} ikan={ikan} />)
+            : pupukList.length > 0
+            ? pupukList.map((pupuk) => (
+                <PupukCard key={pupuk.id} pupuk={pupuk} />
+              )) // <--- Diubah: ikanList -> pupukList, ikan -> pupuk, IkanCard -> PupukCard
             : !error && (
                 <div className="col-span-full text-center py-12 sm:py-16">
                   <InboxIcon className="mx-auto h-16 w-16 md:h-20 md:w-20 text-slate-400/70" />
@@ -593,7 +606,7 @@ function KatalogPage() {
                     selectedAvailability) && (
                     <button
                       onClick={resetAllFilters}
-                      className="mt-5 bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-5 rounded-lg shadow hover:shadow-md transition-all duration-150 ease-in-out text-xs sm:text-sm"
+                      className="mt-5 bg-emerald-500 hover:bg-emerald-600 text-white font-medium py-2 px-5 rounded-lg shadow hover:shadow-md transition-all duration-150 ease-in-out text-xs sm:text-sm" // <--- Warna diubah
                     >
                       Reset Filter & Pencarian
                     </button>

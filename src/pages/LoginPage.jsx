@@ -63,16 +63,20 @@ function LoginPage() {
 
       console.log("Login successful response:", response.data);
 
-      const token = response.data.access_token; // Menggunakan access_token sesuai respons JWT
-      const user = response.data.user;
+      // Pastikan response memiliki token dan user data
+      if (response.data && response.data.access_token) {
+        const token = response.data.access_token;
+        const user = response.data.user;
 
-      if (token) {
+        // Simpan token dan user data
         localStorage.setItem("authToken", token);
-        console.log("Token saved to localStorage:", token);
-
         if (user) {
           localStorage.setItem("authUser", JSON.stringify(user));
         }
+
+        // Set header Authorization untuk request selanjutnya
+        apiClient.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+
         setIsSuccessModalOpen(true);
       } else {
         console.error("Token not found in login response!");

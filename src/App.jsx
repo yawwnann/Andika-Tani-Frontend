@@ -13,7 +13,7 @@ import RegisterPage from "./pages/RegisterPage";
 import DashboardPage from "./pages/Dashboard";
 import ProfilePage from "./pages/ProfilePage";
 import KatalogPage from "./pages/KatalogPage";
-import DetailIkanPage from "./pages/DetailIkanPage";
+import DetailPupukPage from "./pages/DetailPupukPage"; // <--- DIUBAH: Import DetailPupukPage
 import KeranjangPage from "./pages/KeranjangPage";
 import CheckoutPage from "./pages/CheckoutPage";
 import PaymentPage from "./pages/PaymentPage";
@@ -22,12 +22,13 @@ import PesananDetailPage from "./pages/PesananDetailPage";
 
 import "@fontsource/inter";
 
+// Layout utama yang mencakup Navbar dan Footer
 const MainLayout = () => {
   return (
     <>
       <Navbar />
       <main>
-        <Outlet />
+        <Outlet /> {/* Ini akan merender komponen route anak */}
       </main>
       <Footer />
     </>
@@ -38,19 +39,24 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<LoginPage />} />
+        {/* Route tanpa layout utama (misal: halaman autentikasi) */}
+        <Route path="/" element={<LoginPage />} />{" "}
+        {/* Halaman landing default */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
-
+        {/* Route dengan layout utama (Navbar & Footer) */}
         <Route element={<MainLayout />}>
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/katalog" element={<KatalogPage />} />
-          <Route path="/ikan/:slug" element={<DetailIkanPage />} />
+          {/* <--- DIUBAH: dari /ikan/:slug ke /pupuk/:slug */}
+          <Route path="/pupuk/:slug" element={<DetailPupukPage />} />{" "}
+          {/* <--- Menggunakan DetailPupukPage */}
           <Route path="/keranjang" element={<KeranjangPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/payment/:orderId" element={<PaymentPage />} />
-          <Route path="/PesananPage" element={<PesananPage />} />
+          {/* <--- DIUBAH: dari /PesananPage ke /pesanan untuk konsistensi URL */}
+          <Route path="/pesanan" element={<PesananPage />} />
           <Route
             path="/pesanan/detail/:orderId"
             element={<PesananDetailPage />}

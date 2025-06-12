@@ -145,7 +145,7 @@ function Navbar() {
             {user ? (
               <>
                 <NavLink
-                  to="/profile"
+                  to="#"
                   className="flex items-center p-1 rounded-full text-emerald-200 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-emerald-600 focus:ring-white" // <--- Warna diubah
                   title={user.name || "Profile"}
                 >

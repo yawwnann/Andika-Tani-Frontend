@@ -10,16 +10,15 @@ const apiClient = axios.create({
     "Content-Type": "application/json",
     Accept: "application/json",
   },
+  withCredentials: true,
 });
 
 apiClient.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("authToken");
-
     if (token) {
       config.headers["Authorization"] = `Bearer ${token}`;
     }
-
     return config;
   },
   (error) => {
@@ -32,19 +31,28 @@ apiClient.interceptors.response.use(
   (response) => {
     return response;
   },
-  (error) => {
+  async (error) => {
     console.error("Response Error Interceptor:", error.response || error);
 
-    if (error.response && error.response.status === 401) {
-      console.log(
-        "Unauthorized (401)! Potentially expired token. Clearing local data and redirecting."
-      );
-      localStorage.removeItem("authToken");
-      localStorage.removeItem("authUser");
+    if (error.response) {
+      if (error.response.status === 401) {
+        console.log("Unauthorized (401)! Token expired or invalid.");
+        localStorage.removeItem("authToken");
+        localStorage.removeItem("authUser");
 
-      if (window.location.pathname !== "/login") {
-        alert("Sesi Anda telah berakhir. Silakan login kembali.");
-        window.location.href = "/login";
+        if (window.location.pathname !== "/login") {
+          alert("Sesi Anda telah berakhir. Silakan login kembali.");
+          window.location.href = "/login";
+        }
+      } else if (error.response.status === 403) {
+        console.log("Forbidden (403)! Access denied.");
+        localStorage.removeItem("authToken");
+        localStorage.removeItem("authUser");
+
+        if (window.location.pathname !== "/login") {
+          alert("Akses ditolak. Silakan login kembali.");
+          window.location.href = "/login";
+        }
       }
     }
 

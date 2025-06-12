@@ -49,32 +49,6 @@ const getStatusPesananColor = (status) => {
 };
 
 // Helper Function: Warna Badge Status Pembayaran (Sudah Baik)
-const getStatusPembayaranColor = (status) => {
-  // Pastikan nilai status dari API Anda konsisten dengan case di sini
-  const lowerStatus = status?.toLowerCase();
-  switch (lowerStatus) {
-    case "pending":
-    case "menunggu_pembayaran": // Alias jika ada
-      return "bg-yellow-100 text-yellow-700 ring-1 ring-inset ring-yellow-200";
-    case "paid":
-    case "settlement":
-    case "capture":
-    case "lunas": // Jika status pembayaran juga bisa "lunas"
-      return "bg-green-100 text-green-700 ring-1 ring-inset ring-green-200";
-    case "challenge":
-      return "bg-orange-100 text-orange-700 ring-1 ring-inset ring-orange-200";
-    case "failure":
-    case "failed":
-    case "deny":
-    case "cancel":
-    case "cancelled":
-    case "expire":
-    case "expired":
-      return "bg-red-100 text-red-700 ring-1 ring-inset ring-red-200";
-    default:
-      return "bg-slate-100 text-slate-700 ring-1 ring-inset ring-slate-200";
-  }
-};
 
 // Komponen Skeleton (Sudah Baik)
 const OrderRowSkeleton = () => (
@@ -107,6 +81,16 @@ function PesananPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [paginationData, setPaginationData] = useState(null);
+  const [activeTab, setActiveTab] = useState("semua");
+
+  const statusTabs = [
+    { key: "semua", label: "Semua" },
+    { key: "belum_bayar", label: "Belum Bayar" },
+    { key: "diproses", label: "Diproses" },
+    { key: "dikirim", label: "Dikirim" },
+    { key: "selesai", label: "Selesai" },
+    { key: "dibatalkan", label: "Dibatalkan" },
+  ];
 
   const currentPage = parseInt(searchParams.get("page") || "1", 10);
 
@@ -259,17 +243,42 @@ function PesananPage() {
     };
   };
 
+  // Filter orders by activeTab
+  const filteredOrders =
+    activeTab === "semua"
+      ? orders
+      : orders.filter(
+          (order) => (order.status || "").toLowerCase() === activeTab
+        );
+
   return (
-    <div className="bg-slate-100 min-h-screen py-8 sm:py-12">
+    <div className="bg-slate-50 min-h-screen py-10 sm:py-16">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-8 sm:mb-10 text-center">
-          <ShoppingBagIcon className="h-12 w-12 sm:h-16 sm:w-16 text-blue-600 mx-auto mb-3" />
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-800">
-            Riwayat Pesanan Saya
+        <div className="mb-10 text-center">
+          <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 mb-2">
+            Riwayat Pesanan
           </h1>
-          <p className="mt-2 text-sm text-slate-600">
+          <p className="text-base text-slate-500">
             Lihat dan lacak semua transaksi pembelian Anda di sini.
           </p>
+        </div>
+
+        {/* Tabs Status */}
+        <div className="flex flex-wrap gap-2 sm:gap-4 justify-center mb-8">
+          {statusTabs.map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`px-4 py-2 rounded-full font-semibold text-sm transition-all
+                ${
+                  activeTab === tab.key
+                    ? "bg-emerald-600 text-white shadow"
+                    : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-100"
+                }`}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
 
         {error && (
@@ -282,139 +291,121 @@ function PesananPage() {
           </div>
         )}
 
-        <div className="bg-white shadow-xl rounded-lg overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-slate-200">
-              <thead className="bg-slate-50">
-                <tr>
-                  <th
-                    scope="col"
-                    className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider"
-                  >
-                    Tanggal
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider"
-                  >
-                    ID Pesanan
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider"
-                  >
-                    Status Bayar
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider"
-                  >
-                    Status Pesanan
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider"
-                  >
-                    Total
-                  </th>
-                  <th scope="col" className="relative px-6 py-3">
-                    <span className="sr-only">Aksi</span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-slate-200">
-                {loading ? (
-                  Array.from({
-                    length: paginationData?.meta?.per_page || 5,
-                  }).map(
-                    (
-                      _,
-                      index // Gunakan per_page untuk jumlah skeleton
-                    ) => <OrderRowSkeleton key={`skeleton-${index}`} />
-                  )
-                ) : orders.length > 0 ? (
-                  orders.map((order) => {
-                    const { tanggal, jam } = formatDate(
-                      order.created_at || order.tanggal_pesan
-                    );
-                    return (
-                      <tr
-                        key={order.id}
-                        className="hover:bg-slate-50 transition-colors duration-150"
+        {/* List Card Pesanan */}
+        <div className="space-y-8">
+          {loading ? (
+            Array.from({ length: 3 }).map((_, i) => (
+              <div
+                key={i}
+                className="bg-white rounded-2xl shadow p-8 animate-pulse h-40"
+              />
+            ))
+          ) : filteredOrders.length > 0 ? (
+            filteredOrders.map((order) => {
+              const { tanggal, jam } = formatDate(
+                order.created_at || order.tanggal_pesan
+              );
+              return (
+                <div
+                  key={order.id}
+                  className="bg-white rounded-2xl shadow-xl p-6 sm:p-8 flex flex-col gap-4 border border-slate-100"
+                >
+                  {/* Header Card */}
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-slate-800 text-base">
+                        Andika Tani
+                      </span>
+                      {/* Bisa tambahkan logo/toko lain jika multi-toko */}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-bold ${getStatusPesananColor(
+                          order.status
+                        )}`}
                       >
-                        <td className="px-6 py-5 whitespace-nowrap text-sm text-slate-700">
-                          {tanggal}
-                          <div className="text-xs text-slate-500">
-                            {jam} WIB
+                        {order.status
+                          ? order.status.charAt(0).toUpperCase() +
+                            order.status.slice(1)
+                          : "N/A"}
+                      </span>
+                      <span className="text-xs text-slate-400">
+                        {tanggal}, {jam} WIB
+                      </span>
+                    </div>
+                  </div>
+                  {/* Produk List */}
+                  <div className="flex flex-col gap-4">
+                    {(order.items || []).map((item, idx) => (
+                      <div key={idx} className="flex items-center gap-4">
+                        <img
+                          src={item.gambar_utama_url}
+                          alt={item.nama_pupuk}
+                          className="w-16 h-16 object-cover rounded bg-slate-100 border border-slate-200"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="font-semibold text-slate-800 truncate">
+                            {item.nama_pupuk || "Produk"}
                           </div>
-                        </td>
-                        <td className="px-6 py-5 whitespace-nowrap text-sm text-slate-500 font-mono">
-                          {order.midtrans_order_id || `#${order.id}`}
-                        </td>
-                        <td className="px-6 py-5 whitespace-nowrap text-sm">
-                          <span
-                            className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusPembayaranColor(
-                              order.status_pembayaran // Pastikan field ini ada dari API
-                            )}`}
-                          >
-                            {order.status_pembayaran
-                              ? order.status_pembayaran
-                                  .charAt(0)
-                                  .toUpperCase() +
-                                order.status_pembayaran.slice(1).toLowerCase()
-                              : "N/A"}
-                          </span>
-                        </td>
-                        <td className="px-6 py-5 whitespace-nowrap text-sm">
-                          <span
-                            className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusPesananColor(
-                              order.status
-                            )}`}
-                          >
-                            {order.status
-                              ? order.status.charAt(0).toUpperCase() +
-                                order.status.slice(1)
-                              : "N/A"}
-                          </span>
-                        </td>
-                        <td className="px-6 py-5 whitespace-nowrap text-sm text-slate-800 font-semibold">
-                          {formatRupiah(order.total_harga)}
-                        </td>
-                        <td className="px-6 py-5 whitespace-nowrap text-right text-sm font-medium">
-                          <Link
-                            to={`/pesanan/detail/${order.id}`} // Pastikan rute detail benar
-                            className="text-blue-600 hover:text-blue-900 inline-flex items-center py-2 px-3 rounded-md hover:bg-blue-50 transition-all duration-150 group"
-                          >
-                            <EyeIcon className="h-4 w-4 mr-1.5 group-hover:scale-110 transition-transform" />{" "}
-                            Detail
-                          </Link>
-                        </td>
-                      </tr>
-                    );
-                  })
-                ) : (
-                  <tr>
-                    <td colSpan="6" className="text-center py-16 px-6">
-                      <InboxIcon className="h-16 w-16 text-slate-300 mx-auto mb-5" />
-                      <h3 className="text-lg font-semibold text-slate-700 mb-1">
-                        Belum Ada Riwayat Pesanan
-                      </h3>
-                      <p className="text-slate-500 text-sm mb-6">
-                        Semua pesanan yang Anda buat akan muncul di sini.
-                      </p>
+                          <div className="text-xs text-slate-500">
+                            {item.jumlah} x{" "}
+                            {formatRupiah(item.harga_saat_pesanan || 0)}
+                          </div>
+                        </div>
+                        <div className="font-bold text-slate-700 whitespace-nowrap">
+                          {formatRupiah(
+                            (item.harga_saat_pesanan || 0) * (item.jumlah || 0)
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {/* Footer Card */}
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-4 mt-2">
+                    <div className="text-lg font-extrabold text-emerald-700">
+                      Total Pesanan: {formatRupiah(order.total_harga)}
+                    </div>
+                    <div className="flex gap-2 flex-wrap">
+                      {order.status === "selesai" && (
+                        <button className="bg-orange-500 hover:bg-orange-600 text-white font-bold px-5 py-2 rounded-lg transition">
+                          Nilai
+                        </button>
+                      )}
+                      <button className="border border-slate-300 text-slate-700 font-semibold px-5 py-2 rounded-lg hover:bg-slate-100 transition">
+                        Hubungi Penjual
+                      </button>
+                      <button className="border border-slate-300 text-slate-700 font-semibold px-5 py-2 rounded-lg hover:bg-slate-100 transition">
+                        Beli Lagi
+                      </button>
                       <Link
-                        to="/katalog"
-                        className="inline-flex items-center px-5 py-2.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                        to={`/pesanan/detail/${order.id}`}
+                        className="text-emerald-600 hover:text-emerald-800 font-semibold px-5 py-2 rounded-lg border border-emerald-100 bg-emerald-50 hover:bg-emerald-100 transition"
                       >
-                        <ShoppingBagIcon className="h-5 w-5 mr-2 -ml-1" /> Mulai
-                        Belanja Sekarang
+                        Detail
                       </Link>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+            <div className="text-center py-20 px-6">
+              <InboxIcon className="h-20 w-20 text-slate-200 mx-auto mb-6" />
+              <h3 className="text-xl font-bold text-slate-500 mb-2">
+                Belum Ada Riwayat Pesanan
+              </h3>
+              <p className="text-slate-400">
+                Kamu belum pernah melakukan transaksi pesanan.
+              </p>
+              <Link
+                to="/katalog"
+                className="inline-flex items-center px-5 py-2.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors mt-6"
+              >
+                <ShoppingBagIcon className="h-5 w-5 mr-2 -ml-1" /> Mulai Belanja
+                Sekarang
+              </Link>
+            </div>
+          )}
         </div>
 
         {paginationData &&
